@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import 'leaflet/dist/leaflet.css';
+@import "tailwindcss";
+
+@font-face {
+    font-family: "JavaMango";
+    src: url("./assets/fonts/java-mango-font/Javamangodemo-lxKGw.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@theme {
+    --color-background: #FFF8F0;
+    --color-primary: #C08552;
+    --color-secondary: #8C5A3C;
+    --color-accent: #4B2E2B;
+
+    --font-javamango: 'JavaMango', serif;
+    --font-playfair-display: 'Playfair Display', serif;
+}
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+#smooth-content {
+  position: relative;
+}
+
+.overlap {
+  position: relative;
+  z-index: 1; /* Default */
+}
+
+/* Membuat container peta leaflet sepenuhnya transparan */
+.leaflet-transparent-override .leaflet-container {
+  background: transparent !important;
+}
+
+/* Membersihkan kotak putih bawaan ikon div kustom Leaflet */
+.custom-map-marker-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Animasi halus saat gambar muncul */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}

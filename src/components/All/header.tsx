@@ -1,19 +1,16 @@
-import React, { useState, useRef } from 'react';
-import { ChevronDown, BookOpen, Compass, Home, CalendarDays, Menu, X } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, Menu, X } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { Variants } from 'framer-motion';
-
-type HeaderProps = {
-  hasLoaded?: boolean;
-  isSectionMenu?: boolean
-};
+import { Link } from 'react-router'
 
 type MenuItem = {
     name: string;
     icon: LucideIcon;
+    href: string
 };
 
 type PageMenuItem = {
@@ -21,27 +18,25 @@ type PageMenuItem = {
     href: string;
 };
 
-// Data untuk Menu Section (Tengah)
-const menuItems: MenuItem[] = [
-    { name: 'Hero', icon: Home },
-    { name: 'Story', icon: BookOpen },
-    { name: 'Destinations', icon: Compass },
-    { name: 'Events', icon: CalendarDays },
-];
+type HeaderProps = {
+  hasLoaded?: boolean;
+  isSectionMenu?: boolean,
+  selected?: MenuItem
+  setSelected?: (data: MenuItem) => void
+  menuItems?: MenuItem[]
+};
 
-// Data untuk Page Menu (Kiri)
 const pageMenuItems: PageMenuItem[] = [
     { name: 'Home', href: '/' },
     { name: 'Destination', href: '/destination' },
     { name: 'Event & Article', href: '/event' },
-    { name: 'Trip Plan', href: '/trip-plan' },
+    { name: 'Trip Plan', href: '/plan' },
 ];
 
-export default function Header({ hasLoaded, isSectionMenu }: HeaderProps) {
+export default function Header({ hasLoaded, isSectionMenu, selected, setSelected, menuItems}: HeaderProps) {
      
     const [isOpen, setIsOpen] = useState(false);
     const [isPageMenuOpen, setIsPageMenuOpen] = useState(false); // State untuk menu navigasi kiri
-    const [selected, setSelected] = useState(menuItems[0]);
     const [language, setLanguage] = useState(false); // false = ID, true = EN
 
     const iconLeftRef = useRef<SVGSVGElement>(null);
@@ -49,7 +44,10 @@ export default function Header({ hasLoaded, isSectionMenu }: HeaderProps) {
     const textItemRef = useRef<HTMLSpanElement>(null);
     const sliderRef = useRef<HTMLSpanElement>(null);
 
+    const MotionLink = motion.create(Link)
     const handleItemSelect = (item: MenuItem, isFromProp = false) => {
+        if (!selected || !item) return 
+
         if (item.name === selected.name && !isFromProp) {
             setIsOpen(false);
             return;
@@ -82,7 +80,7 @@ export default function Header({ hasLoaded, isSectionMenu }: HeaderProps) {
         }
 
         setTimeout(() => {
-            setSelected(item);
+            setSelected?.(item)
             if (!isFromProp) setIsOpen(false); 
             
             if (textItemRef.current) {
@@ -153,10 +151,8 @@ export default function Header({ hasLoaded, isSectionMenu }: HeaderProps) {
     }, [hasLoaded, {scope: 'header'}])
 
     return (
-        // Menggunakan flex justify-between agar responsif di mobile tanpa harus memaksakan grid-cols
         <header id='header' className="fixed top-0 left-0 w-full h-20 py-4 px-4 md:px-8 lg:px-16 xl:px-24 z-[999] flex items-center justify-between gap-2">
             
-            {/* 1. KIRI: Menu Navigasi Utama (Halaman) */}
             <div className="relative z-50 flex-shrink-0">
                 <button 
                     onClick={() => setIsPageMenuOpen(!isPageMenuOpen)}
@@ -175,24 +171,22 @@ export default function Header({ hasLoaded, isSectionMenu }: HeaderProps) {
                             className="absolute top-16 left-0 w-56 md:w-64 py-3 bg-white/90 border border-white/40 backdrop-blur-md shadow-xl shadow-black/20 rounded-2xl overflow-hidden"
                         >
                             {pageMenuItems.map((item) => (
-                                <motion.a
+                                <MotionLink
                                     key={item.name}
-                                    href={item.href}
+                                    to={item.href}
                                     variants={itemVariants}
                                     className="flex w-full items-center px-6 py-3 text-accent hover:bg-background/80 hover:text-primary transition-all duration-300 group"
                                 >
                                     <span className="text-xl font-bold font-playfair-display tracking-wide group-hover:translate-x-2 transition-transform duration-300">
                                         {item.name}
                                     </span>
-                                </motion.a>
+                                </MotionLink>
                             ))}
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
 
-            {/* 2. TENGAH: Menu Navigasi Section */}
-            {/* Menggunakan absolut centering agar presisi di tengah pada desktop, dan flex-1 di mobile */}
             <div className={`${isSectionMenu ? 'hidden md:flex' : 'hidden'} flex-1 md:flex-none justify-center absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0`}>
                 <nav className="flex items-center justify-between h-12 w-48 md:w-64 px-4 md:px-8 rounded-full bg-white/20 border border-white/40 backdrop-blur-md shadow-lg shadow-black/20 relative">  
                     <button 
@@ -201,10 +195,10 @@ export default function Header({ hasLoaded, isSectionMenu }: HeaderProps) {
                             gsap.to(arrowRef.current, { rotate: !isOpen ? 180 : 0, duration: 0.3 });
                         }}
                         className="flex w-full justify-between items-center gap-2 md:gap-3 text-accent transition-all hover:opacity-80"
-                    >
-                        <selected.icon ref={iconLeftRef} className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" />
+                    >   
+                        {selected && <selected.icon ref={iconLeftRef} className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" />}
                         <span ref={textItemRef} className="text-lg md:text-2xl font-bold font-playfair-display truncate whitespace-nowrap">
-                            {selected.name}
+                            {selected?.name}
                         </span>
                         <ChevronDown ref={arrowRef} className={`w-4 h-4 md:w-5 md:h-5 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                     </button>
@@ -218,16 +212,17 @@ export default function Header({ hasLoaded, isSectionMenu }: HeaderProps) {
                                 exit="hidden"
                                 className="absolute top-16 left-0 w-full py-2 bg-white/90 border border-white/40 backdrop-blur-md shadow-xl shadow-black/20 rounded-2xl overflow-hidden"
                             >
-                                {menuItems.map((item) => (
-                                    <motion.button
+                                {menuItems?.map((item : MenuItem) => (
+                                    <motion.a
                                         key={item.name}
                                         variants={itemVariants}
+                                        href={item.href}
                                         onClick={() => handleItemSelect(item)}
                                         className="flex w-full items-center gap-4 px-5 py-3 text-accent hover:bg-background/80 hover:text-primary transition-all duration-300"
                                     >
                                         <item.icon className="w-5 h-5" />
                                         <span className="text-xl md:text-2xl font-bold font-playfair-display">{item.name}</span>
-                                    </motion.button>
+                                    </motion.a>
                                 ))}
                             </motion.div>
                         )}
@@ -235,7 +230,6 @@ export default function Header({ hasLoaded, isSectionMenu }: HeaderProps) {
                 </nav>
             </div>
 
-            {/* 3. KANAN: Toggle Language */}
             <button 
                 className="flex-shrink-0 flex items-center h-12 w-20 md:w-24 rounded-full bg-white/20 border border-white/40 backdrop-blur-md shadow-lg shadow-black/20 overflow-hidden relative"
                 onClick={toggleLanguage}

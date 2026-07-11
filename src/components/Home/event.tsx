@@ -1,13 +1,20 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import { IoArrowForwardOutline, IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Link } from 'react-router';
 
 import { MainContext } from '../../context';
 
+import background from '../../assets/event-bg.webp'
+
 gsap.registerPlugin(ScrollTrigger);
 
-export default function Event() {
+type EventType = {
+  onActiveSection : (data : string) => void
+}
+
+export default function Event({onActiveSection} : EventType) {
   const { eventData } = useContext(MainContext)!
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -29,10 +36,11 @@ export default function Event() {
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
-          markers: true,
-          start: 'top top',
+          start: 'top 25%',
           end: 'center top',
           toggleActions: 'play reverse play reverse',
+          onEnter: () => onActiveSection('event'),
+          onEnterBack : () => onActiveSection('event')
         }
       });
 
@@ -45,11 +53,11 @@ export default function Event() {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative w-full bg-background px-4 md:px-8 lg:px-34 py-25 lg:py-10 h-svh overflow-hidden flex flex-col justify-center">
+    <div ref={containerRef} id='event' className="child-section relative w-full bg-background px-4 md:px-8 lg:px-34 py-25 lg:py-10 h-svh overflow-hidden flex flex-col justify-center">
       
       <div className="absolute inset-0 z-0 py-25 ">
         <img 
-          src="https://images.unsplash.com/photo-1511497584788-876760111969" 
+          src={background} 
           alt="Nature Background" 
           className="w-full h-full object-cover brightness-[0.4]" 
         />
@@ -77,18 +85,23 @@ export default function Event() {
             <div className="flex items-center gap-4">
               <button 
                 onClick={handlePrev} 
-                className="w-12 h-12 rounded-full border border-white flex items-center justify-center text-white hover:bg-white hover:text-black backdrop-blur-sm transition-colors duration-300"
+                className="w-12 h-12 rounded-full border border-white flex items-center justify-center text-white hover:bg-white hover:text-accent backdrop-blur-sm transition-colors duration-300"
               >
                 <IoChevronBack size={20} />
               </button>
               <button 
                 onClick={handleNext} 
-                className="w-12 h-12 rounded-full border border-white flex items-center justify-center text-white hover:bg-white hover:text-black backdrop-blur-sm transition-colors duration-300"
+                className="w-12 h-12 rounded-full border border-white flex items-center justify-center text-white hover:bg-white hover:text-accent backdrop-blur-sm transition-colors duration-300"
               >
                 <IoChevronForward size={20} />
               </button>
             </div>
           </div>
+
+          <button className='relative h-15 mt-10 lg:mt-16 py-2 px-4 font-playfair-display text-base md:text-xl text-white rounded-full border border-white hover:bg-white hover:text-accent backdrop-blur-sm transition-colors duration-300'>
+            <Link to='/event' className='inset-0 absolute'></Link>
+            Search more Event
+          </button>
         </div>
 
         <div className="w-full sm:w-[85%] lg:w-1/2 h-full flex flex-col items-center justify-center order-2">
@@ -109,7 +122,8 @@ export default function Event() {
               <p className="font-mono text-sm lg:text-base text-gray-700 leading-relaxed line-clamp-3">
                 {currentEvent.desc}
               </p>
-              <button className="group flex items-center gap-4 text-sm font-playfair-display text-primary mt-2 lg:mt-4 hover:text-secondary transition-colors duration-300 w-fit">
+              <button className="group flex relative items-center gap-4 text-sm font-playfair-display text-primary mt-2 lg:mt-4 hover:text-secondary transition-colors duration-300 w-fit">
+                <Link to={`/event/${currentEvent.id}`} className='absolute inset-0'></Link>
                 More informations 
                 <IoArrowForwardOutline className="w-4 h-4 transform group-hover:translate-x-2 transition-transform duration-300" />
               </button>

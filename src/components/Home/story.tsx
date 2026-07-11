@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -12,9 +12,10 @@ gsap.registerPlugin(ScrollTrigger)
 
 type StoryProps = {
     hasLoaded?: boolean;
+    onActiveSection : (data : string) => void
 };
 
-export default function Story({ hasLoaded }: StoryProps) {
+export default function Story({ hasLoaded, onActiveSection }: StoryProps) {
     const [activeChapter, setActiveChapter] = useState<number>(1)
     const storyRef = useRef<HTMLDivElement>(null)
     const storyScrollRef = useRef<HTMLDivElement>(null)
@@ -26,7 +27,6 @@ export default function Story({ hasLoaded }: StoryProps) {
 
             const mm = gsap.matchMedia();
 
-            // 1. Logika Khusus Desktop (Layar >= 1024px)
             mm.add("(min-width: 1024px)", () => {
                 gsap.to(chapters, {
                     xPercent: -100 * (chapters.length - 1),
@@ -38,11 +38,13 @@ export default function Story({ hasLoaded }: StoryProps) {
                         scrub: 1,
                         snap: 1 / (chapters.length - 1),
                         end: () => `+=${endValue}`,
-                        invalidateOnRefresh: true
+                        invalidateOnRefresh: true,
+                        onEnter: () => onActiveSection('story'),
+                        onEnterBack : () => onActiveSection('story')
                     }
                 });
             });
-
+           
             return () => {
                 mm.revert();
                 ScrollTrigger.getAll().forEach(t => t.kill());
@@ -54,7 +56,7 @@ export default function Story({ hasLoaded }: StoryProps) {
         <div 
             id="story"
             ref={storyRef}
-            className="w-full h-auto lg:h-svh flex flex-col lg:flex-row bg-background overflow-visible lg:overflow-hidden"
+            className="overlap w-full h-auto lg:h-svh flex flex-col lg:flex-row bg-background overflow-visible lg:overflow-hidden"
         >
             <Navside activeChapter={activeChapter}/>
             <div 

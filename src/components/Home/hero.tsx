@@ -1,18 +1,19 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-import Background from '../../assets/slg-ai.png'
-import Logo from '../../assets/mataraman-logo-light.png'
+import Background from '../../assets/slg-ai.webp'
+import Logo from '../../assets/mataraman-logo-light.webp'
 
 gsap.registerPlugin(ScrollTrigger)
 
 type HeroProps = {
     hasLoaded?: boolean;
+    onActiveSection: (data: string) => void 
 };
 
-export default function Hero({ hasLoaded }: HeroProps) {
+export default function Hero({ hasLoaded, onActiveSection }: HeroProps) {
     const heroRef = useRef(null)
 
     useGSAP(() => {
@@ -21,9 +22,11 @@ export default function Hero({ hasLoaded }: HeroProps) {
                 delay: 0.5,
                 scrollTrigger: {
                     trigger: heroRef.current,
-                    start: 'top +=1',
+                    start: 'top 25%',
                     end: 'center top',
                     toggleActions: 'play reverse restart reverse',
+                    onEnter: () => onActiveSection('hero'),
+                    onEnterBack : () => onActiveSection('hero')
                 }
             });
             tl.fromTo('.outer-circle', 

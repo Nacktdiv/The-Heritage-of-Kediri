@@ -1,8 +1,8 @@
-import React, { useRef, useState } from "react"
+import { useRef, useState } from "react"
 import gsap from "gsap"
 import { useGSAP } from "@gsap/react"
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ChevronRight } from "lucide-react"; // Menggunakan lucide-react untuk icon arrow
+import { ChevronRight } from "lucide-react"; 
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -29,7 +29,6 @@ export default function Navside({activeChapter} : NavsideProps) {
     useGSAP(() => {
         if (!navsideRef.current) return;
 
-        // 1. Animasi Masuk Awal Sidebar
         gsap.fromTo(navsideRef.current, 
             { scaleX: 0 }, 
             {
@@ -40,7 +39,6 @@ export default function Navside({activeChapter} : NavsideProps) {
             }
         );
 
-        // 2. Animasi Progress Garis Berdasarkan Scroll
         if (lineRef.current) {
             gsap.fromTo(lineRef.current,
                 { scaleY: 0 },

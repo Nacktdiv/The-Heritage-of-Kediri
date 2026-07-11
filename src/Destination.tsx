@@ -1,26 +1,35 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { IoSearch, IoClose, IoTimeOutline, IoLocationOutline, IoFilter } from 'react-icons/io5';
+import { 
+  IoSearch, 
+  IoFilter, 
+  IoCartOutline,
+} from 'react-icons/io5';
 
 import { MainContext } from './context';
 import type { DestinationType } from './context';
 
 import Header from './components/All/header';
 import LoadingScreen from './components/All/loadingScreen';
+import Sidebar from './components/Destination/sidebarDesktop';
+import Modal from './components/Destination/modalMobile';
+import Cart from './components/Destination/cart';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const categories = ['All', 'Landmark', 'Nature', 'Culture', 'Culinary'];
 
 export default function Destination() {
-  const { destinationData } = useContext(MainContext)!
+  const { destinationData, destinationCart, setDestinationCart } = useContext(MainContext)!
 
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoaded, setHasLoaded] = useState(false)
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedDest, setSelectedDest] = useState<DestinationType | null>(null);
+  
+  const [isCartOpen, setIsCartOpen] = useState(false);
   
   const mainRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -45,6 +54,12 @@ export default function Destination() {
     const matchCategory = activeCategory === 'All' || dest.category === activeCategory;
     return matchSearch && matchCategory;
   });
+
+  const addToCart = (id: String) => {
+      if (!destinationCart.includes(id)) {
+      setDestinationCart([...destinationCart, id]);
+      }
+  };
 
   useEffect(() => {
     if(!hasLoaded) return
@@ -86,15 +101,13 @@ export default function Destination() {
       {!hasLoaded ? <LoadingScreen isLoading={isLoading} onCompleteLoad={() => setHasLoaded(true)} /> : 
           <div ref={mainRef} className="w-full bg-background px-4 md:px-8 lg:px-34 py-25 lg:py-10 h-svh flex flex-col overflow-hidden relative">
 
-            {/* ================= Search & Filter ================= */}
-            <div className="gsap-filter-bar flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 z-10 shrink-0">
+            <div className="gsap-filter-bar flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 my-6 z-10 shrink-0">
               <div className="flex flex-col">
                 <h2 className="font-playfair-display text-4xl md:text-5xl text-accent font-bold">Destinations</h2>
                 <p className="font-mono text-sm text-slate-500 mt-1">Discover the hidden gems of Kediri.</p>
               </div>
 
-              <div className="flex flex-col sm:flex-row w-full lg:w-auto gap-4">
-                {/* Search Input */}
+              <div className="flex flex-col sm:flex-row w-full lg:w-auto gap-4 items-center">
                 <div className="relative w-full sm:w-64">
                   <IoSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                   <input 
@@ -106,27 +119,39 @@ export default function Destination() {
                   />
                 </div>
                 
-                {/* Category Filter */}
-                <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setActiveCategory(cat)}
-                      className={`whitespace-nowrap px-4 py-2 rounded-full font-mono text-xs md:text-sm transition-colors duration-300 flex items-center gap-2 border ${
-                        activeCategory === cat 
-                          ? 'bg-primary text-white border-primary shadow-md' 
-                          : 'bg-white text-slate-600 border-slate-200 hover:border-secondary hover:text-secondary'
-                      }`}
-                    >
-                      {cat === 'All' && <IoFilter />}
-                      {cat}
-                    </button>
-                  ))}
+                <div className="flex gap-2 w-full sm:w-auto overflow-hidden">
+                  <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar flex-1">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setActiveCategory(cat)}
+                        className={`whitespace-nowrap px-4 py-2 rounded-full font-mono text-xs md:text-sm transition-colors duration-300 flex items-center gap-2 border ${
+                          activeCategory === cat 
+                            ? 'bg-primary text-white border-primary shadow-md' 
+                            : 'bg-white text-slate-600 border-slate-200 hover:border-secondary hover:text-secondary'
+                        }`}
+                      >
+                        {cat === 'All' && <IoFilter />}
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button 
+                    onClick={() => setIsCartOpen(true)}
+                    className="relative flex items-center justify-center w-[38px] h-[38px] md:w-10 md:h-10 rounded-full bg-accent text-white shadow-md hover:bg-secondary transition-colors shrink-0"
+                  >
+                    <IoCartOutline size={20} />
+                    {destinationCart.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-primary font-mono text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-background">
+                        {destinationCart.length}
+                      </span>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* ================= AREA KONTEN BAWAH (Masonry + Sidebar) ================= */}
             <div className="flex flex-1 gap-8 overflow-hidden relative">
               <div 
                 ref={scrollContainerRef}
@@ -165,106 +190,20 @@ export default function Destination() {
                 )}
               </div>
 
-              {/* KANAN: SIDEBAR (DESKTOP) */}
-              <div 
-                className={`hidden lg:flex flex-col h-full bg-white rounded-3xl shadow-2xl border border-slate-100 transition-all duration-500 transform overflow-hidden ${
-                  selectedDest ? 'w-[400px] translate-x-0 opacity-100' : 'w-0 translate-x-full opacity-0'
-                }`}
-              >
-                {selectedDest && (
-                  <div className="w-full h-full flex flex-col relative">
-                    <button 
-                      onClick={() => setSelectedDest(null)}
-                      className="absolute top-4 right-4 z-20 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full text-white flex items-center justify-center hover:bg-accent transition-colors"
-                    >
-                      <IoClose size={20} />
-                    </button>
-                    
-                    <div className="h-[40%] w-full relative shrink-0">
-                      <img src={selectedDest.img} alt={selectedDest.name} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto hide-scrollbar p-6 -mt-10 relative z-10 flex flex-col gap-4">
-                      <div className="flex items-center gap-2 font-mono text-xs text-primary font-semibold uppercase tracking-wider">
-                        <IoLocationOutline size={16} /> {selectedDest.category}
-                      </div>
-                      
-                      <h3 className="font-javamango text-4xl text-accent tracking-[2px] leading-tight">
-                        {selectedDest.name}
-                      </h3>
-                      
-                      <div className="flex items-center gap-2 font-mono text-sm text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        <IoTimeOutline className="text-secondary" size={18} />
-                        <span>Open: {selectedDest.openTime}</span>
-                      </div>
-
-                      <p className="font-playfair-display text-lg text-slate-800 leading-relaxed font-semibold mt-2">
-                        {selectedDest.desc}
-                      </p>
-
-                      <p className="font-mono text-sm text-slate-600 leading-relaxed text-justify pb-10">
-                        {selectedDest.content}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
+              <Sidebar selectedDest={selectedDest} setSelectedDest={setSelectedDest} addToCart={addToCart} />
+              
             </div>
 
-            {/* ================= MODAL MOBILE & TABLET ================= */}
-            <div 
-              className={`fixed inset-0 z-50 lg:hidden flex justify-center items-end bg-black/40 backdrop-blur-sm transition-all duration-500 ${
-                selectedDest ? 'opacity-100 visible' : 'opacity-0 invisible'
-              }`}
-              onClick={() => setSelectedDest(null)}
-            >
-              <div 
-                className={`w-full h-[85vh] bg-background rounded-t-3xl shadow-2xl flex flex-col relative overflow-hidden transition-transform duration-500 ease-out delay-100 ${
-                  selectedDest ? 'translate-y-0' : 'translate-y-full'
-                }`}
-                onClick={(e) => e.stopPropagation()} 
-              >
-                {selectedDest && (
-                  <>
-                    <div className="w-full h-8 flex justify-center items-center absolute top-0 left-0 z-20" onClick={() => setSelectedDest(null)}>
-                      <div className="w-12 h-1.5 bg-white/50 backdrop-blur-md rounded-full shadow-sm"></div>
-                    </div>
+            <Modal selectedDest={selectedDest} setSelectedDest={setSelectedDest} addToCart={addToCart}/>
 
-                    <div className="h-[35%] w-full relative shrink-0">
-                      <img src={selectedDest.img} alt={selectedDest.name} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto hide-scrollbar px-5 pt-2 pb-10 relative z-10 flex flex-col gap-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1 font-mono text-xs text-primary font-semibold uppercase">
-                          <IoLocationOutline size={14} /> {selectedDest.category}
-                        </div>
-                        <div className="flex items-center gap-1 font-mono text-xs text-slate-500 bg-white px-2 py-1 rounded-md shadow-sm border border-slate-100">
-                          <IoTimeOutline className="text-secondary" /> {selectedDest.openTime}
-                        </div>
-                      </div>
-                      
-                      <h3 className="font-javamango text-4xl text-accent tracking-[2px] leading-none">
-                        {selectedDest.name}
-                      </h3>
-                      
-                      <p className="font-playfair-display text-base text-slate-800 leading-snug font-semibold mt-1">
-                        {selectedDest.desc}
-                      </p>
-
-                      <div className="w-8 h-[2px] bg-secondary my-2"></div>
-
-                      <p className="font-mono text-sm text-slate-600 leading-relaxed text-justify">
-                        {selectedDest.content}
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+            <Cart 
+              destinationData={destinationData} 
+              destinationCart={destinationCart} 
+              setDestinationCart={setDestinationCart} 
+              isCartOpen={isCartOpen} 
+              setIsCartOpen={setIsCartOpen}
+            />
+            
           </div>
       }
     </>

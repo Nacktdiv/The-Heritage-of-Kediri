@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useContext } from 'react';
 import { MapContainer, GeoJSON, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { renderToString } from 'react-dom/server';
+import { Link } from 'react-router';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -10,13 +11,11 @@ import { IoArrowForwardOutline, IoArrowBackOutline, IoLocation } from 'react-ico
 
 import { MainContext } from '../../context';
 
-import testImage from '../../assets/kereta-api-uap-kediri.webp';
 import dataKecamatan from '../../assets/maps/kediri.json';
 
-// Daftarkan ScrollTrigger
 gsap.registerPlugin(ScrollTrigger);
 
-const createCustomIcon = (isActive: boolean, colorClass: string, IconComponent: IconType) => {
+const createCustomIconMap = (isActive: boolean, colorClass: string, IconComponent: IconType) => {
   return L.divIcon({
     className: 'custom-map-marker-wrapper bg-transparent',
     html: renderToString(
@@ -42,15 +41,39 @@ const createCustomIcon = (isActive: boolean, colorClass: string, IconComponent: 
   });
 };
 
-export default function Destination() {
+type CustomDetailType = {
+  colorClass?: string,
+  IconComponent?: IconType
+}
+
+const CreateCustomIconDetail = ({ colorClass, IconComponent} : CustomDetailType) => {
+  if(!colorClass || !IconComponent) return
+
+  return (
+    <div className={`gsap-info-item h-full aspect-square rounded-full bg-primary flex items-center justify-center text-background`}>
+      <IconComponent className='w-[70%] h-[70%] '/>
+    </div>
+  )
+}
+
+type DestinationType = {
+  onActiveSection : (data : string) => void
+}
+
+type SelectedType = {
+  title?: string,
+  desc?: string,
+  img?: string,
+  icon?: IconType,
+  mapColor?: string 
+}
+
+export default function Destination({onActiveSection} : DestinationType) {
   const { destinationData } = useContext(MainContext)!
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [selectedInfo, setSelectedInfo] = useState({
-    title: "Wisata Gunung Kelud",
-    desc: "Numerous volcanic edifices dot the landscape of Sumène Artense. They bear witness to an explosive past!",
-    img: testImage
-  });
+  const [selectedInfo, setSelectedInfo] = useState<SelectedType>();
+  console.log(selectedInfo)
   const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
 
   const styleKecamatan = (feature: any) => {
@@ -84,29 +107,37 @@ export default function Destination() {
     }, [center, map]);
     return null;
   }
+
+  useEffect(()=> {
+    const initData = destinationData.find(data => data.id === 'd1')
+    if (initData){
+      setSelectedInfo({
+        title: initData.name,
+        desc: initData.desc, 
+        img: initData.img,
+        icon: initData.icon,
+        mapColor: initData.mapColor
+      })
+    }
+  }, [])
   
-  // ================= GSAP ANIMATION LOGIC =================
   useEffect(() => {
     const ctx = gsap.context(() => {
-      
-      // Animasi untuk Panel Desktop
       const tlDesktop = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
-          start: 'top top',
+          start: 'top 25%',
           end: 'center top',
           toggleActions: 'play reverse play reverse',
+          onEnter: () => onActiveSection('destination'),
+          onEnterBack : () => onActiveSection('destination')
         }
       });
 
       tlDesktop
-        // Gambar dan Card Kiri masuk dari bawah
         .to('.gsap-preview-image', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' })
-        // Teks 'Tourist Map' masuk dari kiri
         .to('.gsap-heading-title', { opacity: 1, x: 0, duration: 0.8, ease: 'power3.out' }, "-=0.6")
-        // Detail info wisata bertingkat (stagger) muncul dari bawah
         .to('.gsap-info-item', { opacity: 1, y: 0, duration: 0.6, stagger: 0.15, ease: 'power2.out' }, "-=0.5")
-        // Peta muncul secara halus
         .to('.gsap-map-panel', { opacity: 1, duration: 1, ease: 'power2.inOut' }, "-=1");
 
       const tlMobile = gsap.timeline({
@@ -128,13 +159,11 @@ export default function Destination() {
   }, []);
 
   return (
-    // Tambahkan ref ke container utama
-    <div ref={containerRef} className="w-full px-4 md:px-8 lg:px-34 py-25 lg:py-10 h-svh flex flex-col lg:flex-row gap-10 overflow-hidden bg-background">
+    <div ref={containerRef} id='destination' className="child-section w-full px-4 md:px-8 lg:px-34 py-25 lg:py-10 h-svh flex flex-col lg:flex-row gap-10 overflow-hidden bg-background">
       
-      {/* ================= PANEL KIRI (DETAIL PREVIEW CARD) ================= */}
-      <div className="hidden lg:flex w-[50%] h-full flex-col gap-10 justify-between ">
+      {/* panel kiri (detail card) */}
+      <div className="hidden lg:flex w-[50%] h-full flex-col justify-between gap-10 ">
         <div className='w-full flex justify-between gap-10'>
-            {/* Class GSAP Image & State awal opacity-0 translate-y-10 */}
             <div 
                 className='gsap-preview-image opacity-0 translate-y-10 relative mt-20 w-full aspect-square flex items-center justify-center backdrop-blur-md'
                 style={{ backgroundImage: `url(${selectedInfo?.img})`}}
@@ -144,19 +173,18 @@ export default function Destination() {
                     <img src={selectedInfo?.img} alt='destinasi wisata' className="w-full h-full object-cover"/>
                 </div>
             </div>
-            {/* Class GSAP Title & State awal opacity-0 -translate-x-10 */}
             <h3 className='gsap-heading-title opacity-0 -translate-x-10 max-w-[35%] text-6xl font-javamango tracking-[6px] font-bold text-accent mt-2 mb-4 transition-all duration-300'>Tourist <span className='font-mono tracking-normal'>Map</span></h3>
         </div>
 
-        <div className="flex h-full justify-between items-center gap-10 ">
-          {/* Class GSAP Info & State awal opacity-0 translate-y-6 */}
-          <div className='gsap-info-item opacity-0 translate-y-6 h-[75%] aspect-square rounded-full bg-secondary'>
-            {/** tambahkan icon dari ioicon sesuai dengan tema gunung */}
+        <div className="flex justify-between items-center gap-10 ">
+          <div className='h-full aspect-square self-start '>
+            <CreateCustomIconDetail colorClass={selectedInfo?.mapColor} IconComponent={selectedInfo?.icon} />
           </div>
           <div className='w-full h-full flex flex-col gap-5 items-start justify-start'>
             <h4 className='gsap-info-item opacity-0 translate-y-6 text-3xl text-accent font-semibold font-playfair-display tracking-wide'>{selectedInfo?.title}</h4>
             <p className='gsap-info-item opacity-0 translate-y-6 font-playfair-display text-xl tracking-wider'>{selectedInfo?.desc}</p>
-            <button className='gsap-info-item opacity-0 translate-y-6 group flex items-center gap-2 font-playfair-display font-extralight tracking-[4px] text-base md:text-lg text-accent hover:text-secondary transition-colors duration-300'>
+            <button className='gsap-info-item relative opacity-0 translate-y-6 group flex items-center gap-2 font-playfair-display font-extralight tracking-[4px] text-base md:text-lg text-accent hover:text-secondary transition-colors duration-300'>
+              <Link to={`/destination`} className='absolute inset-0'></Link>
               Lebih Lanjut 
               <IoArrowForwardOutline className="w-5 h-5 text-accent transform transition-transform duration-300 ease-out group-hover:translate-x-10 " />
             </button>
@@ -164,8 +192,7 @@ export default function Destination() {
         </div>
       </div>
 
-      {/* ================= PANEL KANAN (MAPS AREA) ================= */}
-      {/* Class GSAP Map & State awal opacity-0 */}
+      {/*  panel kanan (maps) */}
       <div className={`gsap-map-panel opacity-0 hidden lg:block w-[50%] h-full relative overflow-hidden`}>
         <div className="w-full h-full relative z-10 bg-transparent leaflet-transparent-override">
           <MapContainer 
@@ -190,14 +217,16 @@ export default function Destination() {
               <Marker
                 key={poi.id}
                 position={[poi.lat, poi.lng]}
-                icon={createCustomIcon(activeMarkerId === poi.id, poi.mapColor, poi.icon)}
+                icon={createCustomIconMap(activeMarkerId === poi.id, poi.mapColor, poi.icon)}
                 eventHandlers={{
                   click: () => {
                     setActiveMarkerId(poi.id);
                     setSelectedInfo({
                       title: poi.name,
                       desc: poi.desc,
-                      img: poi.img
+                      img: poi.img,
+                      icon: poi.icon,
+                      mapColor: poi.mapColor
                     });
                   }
                 }}
@@ -211,12 +240,10 @@ export default function Destination() {
         </div>
       </div>
 
-      {/* ================= PANEL MOBILE & TABLET ================= */}
+      {/* MOBILE DAN TABLET MODE GUYS */}
         <div className={`flex lg:hidden w-full flex-col gap-18 justify-center items-center h-full ${activeMarkerId ? '' : ''}`}>
-          {/* Class GSAP Mobile Title & State awal opacity-0 translate-y-6 */}
           <h3 className='gsap-mobile-title opacity-0 translate-y-6 w-full text-5xl text-center font-javamango tracking-[6px] font-bold text-accent transition-all duration-300'>Tourist Map</h3>
           {activeMarkerId ? 
-            /* Class GSAP Mobile Content & State awal opacity-0 scale-95 */
             <div className='gsap-mobile-content opacity-0 scale-95 w-full h-full flex flex-col shadow-2xl border-2 border-slate-100 bg-background '>
               <div 
                   className='relative w-full aspect-square flex items-center justify-center'
@@ -231,7 +258,8 @@ export default function Destination() {
               <div className='h-full w-full flex flex-col p-4 gap-2 items-start justify-start'>
                 <h4 className='text-2xl text-accent font-semibold font-playfair-display tracking-wide'>{selectedInfo?.title}</h4>
                 <p className='font-playfair-display text-medium tracking-wider'>{selectedInfo?.desc}</p>
-                <button className='group flex items-center gap-2 font-playfair-display font-extralight tracking-[4px] text-sm text-accent hover:text-secondary transition-colors duration-300'>
+                <button className='group relative flex items-center gap-2 font-playfair-display font-extralight tracking-[4px] text-sm text-accent hover:text-secondary transition-colors duration-300'>
+                  <Link to={`/destination`} className='absolute inset-0'></Link>
                   Lebih Lanjut 
                   <IoArrowForwardOutline className="w-4 h-4 text-accent transform transition-transform duration-300 ease-out group-hover:translate-x-10 " />
                 </button>
@@ -241,7 +269,6 @@ export default function Destination() {
                 </button>
               </div>
             </div> : 
-            /* Class GSAP Mobile Content & State awal opacity-0 scale-95 */
             <div className={`gsap-mobile-content opacity-0 scale-95 flex flex-col w-full h-full relative overflow-hidden gap-4`}>
               
               <div className="w-full flex-1 relative z-10 bg-transparent leaflet-transparent-override">
@@ -269,14 +296,16 @@ export default function Destination() {
                     <Marker
                       key={poi.id}
                       position={[poi.lat, poi.lng]}
-                      icon={createCustomIcon(activeMarkerId === poi.id, poi.mapColor, poi.icon)}
+                      icon={createCustomIconMap(activeMarkerId === poi.id, poi.mapColor, poi.icon)}
                       eventHandlers={{
                         click: () => {
                           setActiveMarkerId(poi.id);
                           setSelectedInfo({
                             title: poi.name,
                             desc: poi.desc,
-                            img: poi.img
+                            img: poi.img,
+                            icon: poi.icon,
+                            mapColor: poi.mapColor
                           });
                         }
                       }}

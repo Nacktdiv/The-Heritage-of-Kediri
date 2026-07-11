@@ -29,21 +29,18 @@
 
 .overlap {
   position: relative;
-  z-index: 1; /* Default */
+  z-index: 1;
 }
 
-/* Membuat container peta leaflet sepenuhnya transparan */
 .leaflet-transparent-override .leaflet-container {
   background: transparent !important;
 }
 
-/* Membersihkan kotak putih bawaan ikon div kustom Leaflet */
 .custom-map-marker-wrapper {
   background: transparent !important;
   border: none !important;
 }
 
-/* Animasi halus saat gambar muncul */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }

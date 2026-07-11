@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { FaWhatsapp, FaInstagram, FaGithub, FaEnvelope } from 'react-icons/fa6';
@@ -11,33 +11,33 @@ const siteInfo = {
   title: "Kediri",
   subtitle: "TOURISM",
   desc: "Mengeksplorasi keindahan alam, peninggalan peradaban masa lalu, serta pesona budaya Kota dan Kabupaten Kediri. Mari mulai perjalanan Anda melintasi ruang dan waktu.",
-  author: "John Doe (Frontend Developer)",
+  author: "Nacktidv (Fullstack Developer)",
   year: new Date().getFullYear(),
 };
 
 const footerLinks = [
-  { id: 'l1', name: 'Destinations', url: '#' },
-  { id: 'l2', name: 'Events & Agenda', url: '#' },
-  { id: 'l3', name: 'Culinary Guide', url: '#' },
-  { id: 'l4', name: 'Travel Info', url: '#' },
+  { id: 'l1', name: 'Destinations', url: '/destination' },
+  { id: 'l2', name: 'Events & Agenda', url: '/event' },
+  { id: 'l4', name: 'Travel Plan', url: '/plan' },
 ];
 
 const socialLinks = [
-  { id: 'wa', name: 'WhatsApp', url: 'https://wa.me/08123456789', icon: FaWhatsapp, color: 'text-green-500', hover: 'hover:text-primary' },
+  { id: 'wa', name: 'WhatsApp', url: 'https://wa.me/081548272241', icon: FaWhatsapp, color: 'text-green-500', hover: 'hover:text-primary' },
   { id: 'ig', name: 'Instagram', url: '#', icon: FaInstagram, color: 'text-pink-500', hover: 'hover:text-accent' },
   { id: 'gh', name: 'GitHub', url: '#', icon: FaGithub, color: 'text-gray-800', hover: 'hover:text-secondary' },
   { id: 'em', name: 'Email', url: '#', icon: FaEnvelope, color: 'text-blue-500', hover: 'hover:text-primary' },
 ];
 
-// ==========================================
-// KOMPONEN UTAMA FOOTER
-// ==========================================
-export default function Footer() {
+
+type FooterType = {
+  onActiveSection : (data : string) => void
+}
+
+export default function Footer({onActiveSection} : FooterType) {
   const containerRef = useRef<HTMLDivElement>(null);
   const q = gsap.utils.selector(containerRef);
 
   useEffect(() => {
-    // Animasi menggunakan GSAP ScrollTrigger
     const ctx = gsap.context(() => {
       gsap.fromTo(
         q('.gsap-fade-up'),
@@ -53,8 +53,10 @@ export default function Footer() {
           ease: 'power3.out',
           scrollTrigger: {
             trigger: containerRef.current,
-            start: 'top 75%', // Mulai animasi ketika bagian atas footer mencapai 75% dari viewport
-            toggleActions: 'play none none reverse', // Akan terputar kembali jika di-scroll ke atas
+            start: 'top 25%',
+            toggleActions: 'play reverse restart reverse', 
+            onEnter: () => onActiveSection('footer'),
+            onEnterBack : () => onActiveSection('footer')
           }
         }
       );
@@ -75,28 +77,24 @@ export default function Footer() {
       );
     }, containerRef);
 
-    return () => ctx.revert(); // Cleanup GSAP saat unmount
+    return () => ctx.revert(); 
   }, [q]);
 
   return (
-    // 1. Template padding & height wajib
-    // 3. Warna bg menggunakan bg-background
     <footer 
       ref={containerRef}
+      id='footer'
       className="px-4 md:px-8 lg:px-34 py-25 lg:py-10 h-svh bg-background flex flex-col justify-between relative overflow-hidden"
     >
       
-      {/* Latar Belakang Abstrak (Opsional untuk memperkuat tema) */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
 
-      {/* --- BAGIAN ATAS (Header Footer) --- */}
       <div className="flex flex-col lg:flex-row justify-between items-center lg:items-end gap-10 mt-10 lg:mt-20 z-10">
         <div className="w-full lg:w-1/2 flex flex-col text-center lg:text-left">
           <h4 className="gsap-fade-up font-playfair-display text-xl md:text-2xl text-secondary tracking-[0.3em] font-light uppercase mb-2">
             Explore
           </h4>
-          {/* 4 & 5. Typografi menggunakan Javamango & warna Accent untuk Logo */}
           <h2 className="gsap-fade-up font-javamango text-6xl md:text-8xl lg:text-9xl text-accent tracking-[0.05em] font-bold leading-none">
             {siteInfo.title}
           </h2>
@@ -112,16 +110,12 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Garis Dekoratif Tengah */}
       <div className="w-full h-[1px] bg-slate-300 my-8 lg:my-0 z-10 relative">
         <div className="gsap-line absolute top-0 left-0 h-full bg-accent"></div>
       </div>
 
-      {/* --- BAGIAN BAWAH (Links & Socials) --- */}
-      {/* 2. Responsif stack di mobile, rapi di desktop */}
       <div className="flex flex-col lg:flex-row justify-between items-center gap-10 z-10 mb-10 lg:mb-0">
         
-        {/* Navigation Links */}
         <div className="gsap-fade-up flex flex-wrap justify-center lg:justify-start gap-6 lg:gap-10">
           {footerLinks.map((link) => (
             <a 
@@ -135,7 +129,6 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Social Media Icons */}
         <div className="gsap-fade-up flex items-center gap-6">
           {socialLinks.map((social) => {
             const Icon = social.icon;
@@ -155,7 +148,6 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* --- COPYRIGHT & AUTHOR --- */}
       <div className="gsap-fade-up flex flex-col lg:flex-row justify-between items-center gap-2 z-10 text-center lg:text-left mt-auto lg:mt-0 font-mono text-xs text-slate-400 pb-5 lg:pb-0">
         <p>&copy; {siteInfo.year} {siteInfo.title} {siteInfo.subtitle}. All rights reserved.</p>
         <p>

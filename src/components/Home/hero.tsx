@@ -36,7 +36,7 @@ export default function Hero({ hasLoaded, onActiveSection }: HeroProps) {
             .fromTo('.inner-circle', 
                 { scale: 3, opacity: 0 }, 
                 { scale: 1, opacity: 1, duration: 1.2, ease: "expo.out" }, 
-                "-=0.8" // Overlap dengan lingkaran luar
+                "-=0.8"
             )
             .fromTo('.animate-item',
                 { opacity: 0, y: 30, scale: 0.9 }, 
